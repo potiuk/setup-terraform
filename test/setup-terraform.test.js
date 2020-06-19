@@ -163,6 +163,48 @@ describe('Setup Terraform', () => {
     expect(creds.indexOf(credentialsToken)).toBeGreaterThan(-1);
   });
 
+  test('gets latest version matching specification adds token and hostname on linux, amd64', async () => {
+    const version = '<0.10.0';
+    const credentialsHostname = 'app.terraform.io';
+    const credentialsToken = 'asdfjkl';
+
+    core.getInput = jest
+      .fn()
+      .mockReturnValueOnce(version)
+      .mockReturnValueOnce(credentialsHostname)
+      .mockReturnValueOnce(credentialsToken);
+
+    tc.downloadTool = jest
+      .fn()
+      .mockReturnValueOnce('file.zip');
+
+    tc.extractZip = jest
+      .fn()
+      .mockReturnValueOnce('file');
+
+    os.platform = jest
+      .fn()
+      .mockReturnValue('linux');
+
+    os.arch = jest
+      .fn()
+      .mockReturnValue('amd64');
+
+    nock('https://releases.hashicorp.com')
+      .get('/terraform/index.json')
+      .reply(200, json);
+
+    await setup();
+
+    // downloaded CLI has been added to path
+    expect(core.addPath).toHaveBeenCalled();
+
+    // expect credentials are in ${HOME}.terraformrc
+    const creds = await fs.readFile(`${process.env.HOME}/.terraformrc`, { encoding: 'utf8' });
+    expect(creds.indexOf(credentialsHostname)).toBeGreaterThan(-1);
+    expect(creds.indexOf(credentialsToken)).toBeGreaterThan(-1);
+  });
+
   test('fails when metadata cannot be downloaded', async () => {
     const version = 'latest';
     const credentialsHostname = 'app.terraform.io';
