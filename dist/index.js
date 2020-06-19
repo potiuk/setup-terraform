@@ -2068,7 +2068,6 @@ function findLatest (allVersions) {
 // Find specific version given list of all available
 function findSpecific (allVersions, version) {
   core.debug(`Parsing version list for version ${version}`);
-
   const versionObj = allVersions.versions[version];
 
   if (!versionObj) {
@@ -2076,6 +2075,22 @@ function findSpecific (allVersions, version) {
   }
 
   return versionObj;
+}
+
+// Find specific version given list of all available
+function findLatestMatchingSpecification (allVersions, version) {
+  core.debug(`Parsing version list for latest matching specification ${version}`);
+  const versionList = []
+  for (const _version in allVersions.versions) {
+      versionList.push(_version)
+  }
+  const bestMatchVersion = semver.maxSatisfying(versionList, version);
+  if (!bestMatchVersion) {
+    throw new Error(`Could not find Terraform version matching ${version} in version list`);
+  }
+  core.info(`Latest version satisfying ${version} is ${bestMatchVersion}`);
+
+  return allVersions.versions[bestMatchVersion];
 }
 
 async function downloadMetadata () {
@@ -2216,8 +2231,9 @@ async function run () {
     const versionMetadata = await downloadMetadata();
 
     // Find latest or a specific version like 0.1.0
-    const versionObj = version.toLowerCase() === 'latest' ? findLatest(versionMetadata) : findSpecific(versionMetadata, version);
-
+    const versionObj = version.toLowerCase() === 'latest' ? findLatest(versionMetadata)
+      : version.startsWith('<') ? findLatestMatchingSpecification(versionMetadata, version)
+        : findSpecific(versionMetadata, version);
     // Get the build available for this runner's OS and a 64 bit architecture
     const buildObj = getBuild(versionObj, osPlat, osArch);
 
@@ -2238,7 +2254,7 @@ async function run () {
     }
   } catch (error) {
     core.error(error);
-    throw new Error(error);
+    throw error;
   }
 }
 

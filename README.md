@@ -142,7 +142,7 @@ The following inputs are supported.
 
 - `cli_config_credentials_token` - (optional) The API token for a Terraform Cloud/Enterprise instance to place within the credentials block of the Terraform CLI configuration file.
 
-- `terraform_version` - (optional) The version of Terraform CLI to install. A value of `latest` will install the latest version of Terraform CLI. Defaults to `latest`.
+- `terraform_version` - (optional) The version of Terraform CLI to install. Instead of full version string you can also specify constraint string starting with '<' (for example `<1.13.0`) to install the latest version satisfying the constraint. A value of `latest` will install the latest version of Terraform CLI. Defaults to `latest`.
 
 - `terraform_wrapper` - (optional) Whether or not to install a wrapper to wrap subsequent calls of the `terraform` binary and expose its STDOUT, STDERR, and exit code as outputs named `stdout`, `stderr`, and `exitcode` respectively. Defaults to `true`.
 
